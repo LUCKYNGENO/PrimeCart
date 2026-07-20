@@ -50,9 +50,6 @@ def admin_required():
 # HOME PAGE
 # ==========================
 
-# ==========================
-# HOME PAGE
-# ==========================
 
 @app.route("/")
 def home():
@@ -167,9 +164,6 @@ def logout():
 # PRODUCT — VIEW & REVIEWS
 # ==========================
 
-# ==========================
-# PRODUCT — VIEW & REVIEWS
-# ==========================
 
 @app.route("/product/<int:id>")
 def product(id):
@@ -256,24 +250,25 @@ def add_review(id):
 
 @app.route("/admin")
 def admin():
-
     if not admin_required():
         return redirect(url_for("login"))
 
     conn = get_db()
     cur = conn.cursor()
 
+    # Get all products
     cur.execute("SELECT * FROM products")
     products = cur.fetchall()
 
-    cur.execute("SELECT COUNT(*) FROM products")
-    total_products = cur.fetchone()[0]
+    # Dashboard statistics
+    cur.execute("SELECT COUNT(*) AS total FROM products")
+    total_products = cur.fetchone()["total"]
 
-    cur.execute("SELECT COUNT(*) FROM clicks")
-    total_clicks = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(*) AS total FROM clicks")
+    total_clicks = cur.fetchone()["total"]
 
-    cur.execute("SELECT COUNT(*) FROM reviews")
-    total_reviews = cur.fetchone()[0]
+    cur.execute("SELECT COUNT(*) AS total FROM reviews")
+    total_reviews = cur.fetchone()["total"]
 
     cur.close()
     conn.close()
