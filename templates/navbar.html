@@ -1,0 +1,42 @@
+<nav class="navbar">
+
+    <div class="logo">
+        <a href="/">PrimeCart</a>
+    </div>
+
+    <form action="/" method="GET" class="search-form" role="search">
+
+        <input
+            type="text"
+            name="search"
+            value="{{ request.args.get('search', '') }}"
+            placeholder="Search products..."
+            aria-label="Search products">
+
+        <button type="submit" aria-label="Search">
+            🔍
+        </button>
+
+    </form>
+
+    <ul class="nav-links">
+
+        <li><a href="/" class="{{ 'active' if not request.args.get('category') and request.path == '/' else '' }}">Home</a></li>
+
+        <li><a href="/?category=Electronics" class="{{ 'active' if request.args.get('category') == 'Electronics' else '' }}">Electronics</a></li>
+
+        <li><a href="/?category=Phones" class="{{ 'active' if request.args.get('category') == 'Phones' else '' }}">Phones</a></li>
+
+        <li><a href="/?category=Gaming" class="{{ 'active' if request.args.get('category') == 'Gaming' else '' }}">Gaming</a></li>
+
+        <li><a href="/login">Admin</a></li>
+
+        <li><a href="/cart" aria-label="Cart">🛒 Cart{% if cart_count %} <span class="cart-badge">{{ cart_count }}</span>{% endif %}</a></li>
+
+        <li><a href="/contact">Contact</a></li>
+
+        <li><a href="/about">About</a></li>
+
+    </ul>
+
+</nav>

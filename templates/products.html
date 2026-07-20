@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ product[1] }}{% endblock %}
+
+{% block content %}
+
+<div class="product-page">
+
+    <div class="product-image">
+
+        <img src="{{ url_for('static', filename='uploads/' + product[4]) }}">
+
+    </div>
+
+    <div class="product-info">
+
+        <h1>{{ product[1] }}</h1>
+
+        <h2>$ {{ product[3] }}</h2>
+
+        <p>{{ product[6] }}</p>
+
+        <h2>Leave a Review</h2>
+
+<form action="/review/{{ product[0] }}" method="POST">
+
+    <input
+        type="text"
+        name="username"
+        placeholder="Your Name"
+        required
+    >
+
+    <select name="rating">
+
+        <option value="5">⭐⭐⭐⭐⭐</option>
+        <option value="4">⭐⭐⭐⭐</option>
+        <option value="3">⭐⭐⭐</option>
+        <option value="2">⭐⭐</option>
+        <option value="1">⭐</option>
+
+    </select>
+
+    <textarea
+        name="comment"
+        placeholder="Write your review..."
+        required
+    ></textarea>
+
+    <button type="submit">
+        Submit Review
+    </button>
+
+</form>
+
+<h2>Customer Reviews</h2>
+
+{% for review in reviews %}
+
+<div class="review">
+
+    <h4>{{ review[2] }}</h4>
+
+    <p>Rating: {{ review[3] }}/5 ⭐</p>
+
+    <p>{{ review[4] }}</p>
+
+    <small>{{ review[5] }}</small>
+
+</div>
+
+{% endfor %}
+
+        <a href="/buy/{{ product[0] }}">
+    <button>Buy Now</button>
+</a>
+
+    </div>
+
+</div>
+
+{% endblock %}

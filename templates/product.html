@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product[1] }}{% endblock %}
+
+{% block content %}
+
+<div class="product-page">
+
+    <div class="product-image">
+        <img src="{{ url_for('static', filename='uploads/' + product[4]) }}" alt="{{ product[1] }}">
+    </div>
+
+    <div class="product-info">
+
+        <h1>{{ product[1] }}</h1>
+
+        <h3>Brand: {{ product[8] or "Generic" }}</h3>
+
+        <p class="rating">⭐ {{ product[10] }}/5</p>
+
+        {% if product[9] %}
+            <p class="old-price">$ {{ product[9] }}</p>
+        {% endif %}
+
+        <p class="price">$ {{ product[3] }}</p>
+
+        <p class="stock">{{ product[11] }}</p>
+
+        <p>{{ product[6] }}</p>
+
+        <a href="/wishlist/add/{{ product[0] }}">
+    <button>❤️ Save</button>
+</a>
+
+        <a href="/buy/{{ product[0] }}">
+            <button>Buy Now</button>
+        </a>
+
+        <hr>
+
+<h2>Leave a Review</h2>
+
+<form action="/review/{{ product[0] }}" method="POST">
+
+    <input
+        type="text"
+        name="username"
+        placeholder="Your Name"
+        required>
+
+    <select name="rating">
+
+        <option value="5">⭐⭐⭐⭐⭐</option>
+        <option value="4">⭐⭐⭐⭐</option>
+        <option value="3">⭐⭐⭐</option>
+        <option value="2">⭐⭐</option>
+        <option value="1">⭐</option>
+
+    </select>
+
+    <textarea
+        name="comment"
+        placeholder="Write your review..."
+        required></textarea>
+
+    <button type="submit">
+        Submit Review
+    </button>
+
+</form>
+
+<hr>
+
+<h2>Customer Reviews</h2>
+
+{% if reviews %}
+
+    {% for review in reviews %}
+
+    <div class="review">
+
+        <h3>{{ review[0] }}</h3>
+
+        <p>
+            Rating:
+            {{ "⭐" * review[1] }}
+        </p>
+
+        <p>{{ review[2] }}</p>
+
+        <small>{{ review[3] }}</small>
+
+    </div>
+
+    {% endfor %}
+
+{% else %}
+
+<p>No reviews yet.</p>
+
+{% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

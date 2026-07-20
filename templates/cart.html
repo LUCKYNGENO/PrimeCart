@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart{% endblock %}
+
+{% block content %}
+
+<h1 class="section-title">🛒 Shopping Cart</h1>
+
+<section class="products">
+
+{% if products %}
+
+    {% for product in products %}
+
+    <div class="card">
+
+        <img src="{{ url_for('static', filename='uploads/' + product[4]) }}">
+
+        <h3>{{ product[1] }}</h3>
+
+        <p class="price">$ {{ product[3] }}</p>
+
+        <a href="/buy/{{ product[0] }}">
+            <button>Buy Now</button>
+        </a>
+
+    </div>
+
+    {% endfor %}
+
+{% else %}
+
+<h2>Your cart is empty.</h2>
+
+{% endif %}
+
+</section>
+
+{% endblock %}

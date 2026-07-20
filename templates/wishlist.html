@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Wishlist{% endblock %}
+
+{% block content %}
+
+<h1 class="section-title">❤️ My Wishlist</h1>
+
+<section class="products">
+
+{% for product in products %}
+
+<div class="card">
+
+    <img src="{{ url_for('static', filename='uploads/' + product[4]) }}">
+
+    <h3>{{ product[1] }}</h3>
+
+    <p class="price">$ {{ product[3] }}</p>
+
+    <a href="/buy/{{ product[0] }}">
+        <button>Buy Now</button>
+    </a>
+
+</div>
+
+{% endfor %}
+
+</section>
+
+{% endblock %}

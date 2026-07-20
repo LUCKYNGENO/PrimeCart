@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block title %}PrimeCart — Best Deals from Trusted Stores{% endblock %}
+{% block description %}Shop top electronics, fashion, home goods, and more at PrimeCart.{% endblock %}
+
+{% block content %}
+
+<!-- ================================
+     HERO
+================================ -->
+<section class="hero">
+    <div class="hero-content">
+        <h1>Welcome to <span class="hero-brand">PrimeCart</span></h1>
+        <p>Find the Best Deals from Trusted Online Stores</p>
+        <a href="#products" class="btn btn--primary btn--lg">
+            <i class="fa-solid fa-bag-shopping"></i> Shop Now
+        </a>
+    </div>
+</section>
+
+<!-- ================================
+     CATEGORIES
+================================ -->
+<section class="categories">
+    <h2 class="section-title">Shop by Category</h2>
+    <div class="category-grid">
+
+        <a href="/?category=Electronics" class="category-card {% if category == 'Electronics' %}category-card--active{% endif %}">
+            <span class="category-icon">📱</span>
+            <h3>Electronics</h3>
+        </a>
+
+        <a href="/?category=Fashion" class="category-card {% if category == 'Fashion' %}category-card--active{% endif %}">
+            <span class="category-icon">👕</span>
+            <h3>Fashion</h3>
+        </a>
+
+        <a href="/?category=Home" class="category-card {% if category == 'Home' %}category-card--active{% endif %}">
+            <span class="category-icon">🏠</span>
+            <h3>Home</h3>
+        </a>
+
+        <a href="/?category=Beauty" class="category-card {% if category == 'Beauty' %}category-card--active{% endif %}">
+            <span class="category-icon">💄</span>
+            <h3>Beauty</h3>
+        </a>
+
+        <a href="/?category=Sports" class="category-card {% if category == 'Sports' %}category-card--active{% endif %}">
+            <span class="category-icon">🏋️</span>
+            <h3>Sports</h3>
+        </a>
+
+        <a href="/?category=Books" class="category-card {% if category == 'Books' %}category-card--active{% endif %}">
+            <span class="category-icon">📚</span>
+            <h3>Books</h3>
+        </a>
+
+    </div>
+</section>
+
+<!-- ================================
+     TRENDING PRODUCTS
+================================ -->
+{% if trending %}
+<section class="product-section">
+    <h2 class="section-title">
+        <i class="fa-solid fa-fire"></i> Trending Now
+    </h2>
+
+    <div class="products products--compact">
+        {% for product in trending %}
+        <div class="card">
+            <a href="/product/{{ product[0] }}">
+                {% if product[4] %}
+                    <img
+                        src="{{ url_for('static', filename='uploads/' + product[4]) }}"
+                        alt="{{ product[1] }}"
+                        loading="lazy"
+                    >
+                {% else %}
+                    <img src="https://placehold.co/250x200?text=No+Image" alt="{{ product[1] }}">
+                {% endif %}
+            </a>
+
+            <div class="card-body">
+                <h3 class="card-title">{{ product[1] }}</h3>
+                <p class="price">${{ "%.2f"|format(product[3]) }}</p>
+                <a href="/product/{{ product[0] }}" class="btn btn--outline btn--sm">View Product</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ================================
+     FEATURED PRODUCTS
+================================ -->
+{% if featured_products %}
+<section class="product-section">
+    <h2 class="section-title">
+        <i class="fa-solid fa-star"></i> Featured Products
+    </h2>
+
+    <div class="products">
+        {% for product in featured_products %}
+        <div class="card">
+
+            {% if product[13] and product[13] > 0 %}
+                <div class="sale-badge">{{ product[13] }}% OFF</div>
+            {% endif %}
+
+            <a href="/product/{{ product[0] }}">
+                {% if product[4] %}
+                    <img
+                        src="{{ url_for('static', filename='uploads/' + product[4]) }}"
+                        alt="{{ product[1] }}"
+                        loading="lazy"
+                    >
+                {% else %}
+                    <img src="https://placehold.co/250x200?text=No+Image" alt="{{ product[1] }}">
+                {% endif %}
+            </a>
+
+            <div class="card-body">
+                <h3 class="card-title">{{ product[1] }}</h3>
+
+                {% if product[13] and product[13] > 0 %}
+                    <p class="old-price">${{ "%.2f"|format(product[3]) }}</p>
+                    <p class="price">${{ "%.2f"|format(product[3] * (100 - product[13]) / 100) }}</p>
+                {% else %}
+                    <p class="price">${{ "%.2f"|format(product[3]) }}</p>
+                {% endif %}
+
+                {% if product[6] %}
+                    <p class="card-desc">{{ product[6][:80] }}{% if product[6]|length > 80 %}…{% endif %}</p>
+                {% endif %}
+
+                <a href="/product/{{ product[0] }}" class="btn btn--outline btn--sm">View Product</a>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ================================
+     ALL PRODUCTS
+================================ -->
+<section id="products" class="product-section">
+
+    <div class="section-header">
+        <h2 class="section-title">
+            {% if search %}
+                <i class="fa-solid fa-magnifying-glass"></i>
+                Results for "{{ search }}"
+            {% elif category %}
+                <i class="fa-solid fa-tag"></i>
+                {{ category }}
+            {% else %}
+                <i class="fa-solid fa-grid-2"></i>
+                All Products
+            {% endif %}
+        </h2>
+
+        {% if search or category %}
+            <a href="/" class="btn btn--ghost btn--sm">
+                <i class="fa-solid fa-xmark"></i> Clear filter
+            </a>
+        {% endif %}
+    </div>
+
+    {% if products %}
+        <div class="products">
+            {% for product in products %}
+            <div class="card">
+
+                {% if product[13] and product[13] > 0 %}
+                    <div class="sale-badge">{{ product[13] }}% OFF</div>
+                {% endif %}
+
+                <a href="/product/{{ product[0] }}">
+                    {% if product[4] %}
+                        <img
+                            src="{{ url_for('static', filename='uploads/' + product[4]) }}"
+                            alt="{{ product[1] }}"
+                            loading="lazy"
+                        >
+                    {% else %}
+                        <img src="https://placehold.co/250x200?text=No+Image" alt="{{ product[1] }}">
+                    {% endif %}
+                </a>
+
+                <div class="card-body">
+                    <h3 class="card-title">{{ product[1] }}</h3>
+
+                    {% if product[13] and product[13] > 0 %}
+                        <p class="old-price">${{ "%.2f"|format(product[3]) }}</p>
+                        <p class="price">${{ "%.2f"|format(product[3] * (100 - product[13]) / 100) }}</p>
+                    {% else %}
+                        <p class="price">${{ "%.2f"|format(product[3]) }}</p>
+                    {% endif %}
+
+                    {% if product[6] %}
+                        <p class="card-desc">{{ product[6][:80] }}{% if product[6]|length > 80 %}…{% endif %}</p>
+                    {% endif %}
+
+                    <div class="card-actions">
+                        <a href="/wishlist/add/{{ product[0] }}" class="btn btn--ghost btn--sm" title="Save to Wishlist">
+                            <i class="fa-regular fa-heart"></i> Save
+                        </a>
+                        <a href="/cart/add/{{ product[0] }}" class="btn btn--outline btn--sm">
+                            <i class="fa-solid fa-cart-plus"></i> Cart
+                        </a>
+                        <a href="/buy/{{ product[0] }}" class="btn btn--primary btn--sm" target="_blank" rel="noopener noreferrer">
+                            Buy Now
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <!-- Empty state -->
+        <div class="empty-state">
+            <i class="fa-solid fa-box-open"></i>
+            {% if search %}
+                <p>No products found for <strong>"{{ search }}"</strong>. Try a different search.</p>
+            {% elif category %}
+                <p>No products in <strong>{{ category }}</strong> yet. Check back soon!</p>
+            {% else %}
+                <p>No products available yet. Check back soon!</p>
+            {% endif %}
+            <a href="/" class="btn btn--primary btn--sm">Back to Home</a>
+        </div>
+    {% endif %}
+
+</section>
+
+<!-- ================================
+     WHY PRIMECART
+================================ -->
+<section class="features">
+    <div class="feature">
+        <i class="fa-solid fa-shield-halved feature-icon"></i>
+        <h3>Trusted Products</h3>
+        <p>We carefully select quality products from trusted stores.</p>
+    </div>
+    <div class="feature">
+        <i class="fa-solid fa-tag feature-icon"></i>
+        <h3>Great Deals</h3>
+        <p>Find products with competitive prices and exclusive promotions.</p>
+    </div>
+    <div class="feature">
+        <i class="fa-solid fa-bolt feature-icon"></i>
+        <h3>Fast Shopping</h3>
+        <p>Go directly to the seller using our affiliate links.</p>
+    </div>
+</section>
+
+{% endblock %}

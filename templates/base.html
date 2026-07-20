@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta -->
+    <title>{% block title %}PrimeCart{% endblock %}</title>
+    <meta name="description" content="{% block description %}Shop the best products at PrimeCart — your go-to affiliate store.{% endblock %}">
+    <meta name="theme-color" content="#e63946">
+
+    <!-- Open Graph (for link previews on WhatsApp, Twitter, etc.) -->
+    <meta property="og:title" content="{% block og_title %}PrimeCart{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Shop the best deals at PrimeCart.{% endblock %}">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="{{ url_for('static', filename='images/banner.jpg') }}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    {% include 'navbar.html' %}
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-container" role="alert" aria-live="polite">
+                {% for category, message in messages %}
+                    <div class="flash flash--{{ category }}">
+                        <span>
+                            {% if category == 'success' %}<i class="fa-solid fa-circle-check"></i>
+                            {% elif category == 'error' %}<i class="fa-solid fa-circle-xmark"></i>
+                            {% elif category == 'info' %}<i class="fa-solid fa-circle-info"></i>
+                            {% else %}<i class="fa-solid fa-bell"></i>
+                            {% endif %}
+                            {{ message }}
+                        </span>
+                        <button class="flash__close" onclick="this.parentElement.remove()" aria-label="Dismiss">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    {% include 'footer.html' %}
+
+    <!-- Auto-dismiss flash messages after 4 seconds -->
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.flash').forEach(el => {
+                el.style.transition = 'opacity 0.5s ease';
+                el.style.opacity = '0';
+                setTimeout(() => el.remove(), 500);
+            });
+        }, 4000);
+    </script>
+
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>
