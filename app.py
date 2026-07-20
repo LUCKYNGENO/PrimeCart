@@ -6,7 +6,7 @@ import os
 import config
 
 app = Flask(__name__)
-app.secret_key = "PrimeCartSecret123"
+app.secret_key = config.SECRET_KEY
 # Upload folder
 UPLOAD_FOLDER = "static/uploads"
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
@@ -17,6 +17,7 @@ app.config["MYSQL_HOST"] = config.MYSQL_HOST
 app.config["MYSQL_USER"] = config.MYSQL_USER
 app.config["MYSQL_PASSWORD"] = config.MYSQL_PASSWORD
 app.config["MYSQL_DB"] = config.MYSQL_DB
+app.config["MYSQL_PORT"] = config.MYSQL_PORT
 
 mysql = MySQL(app)
 
