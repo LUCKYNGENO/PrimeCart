@@ -27,7 +27,7 @@ def get_db():
         password=config.MYSQL_PASSWORD,
         database=config.MYSQL_DB,
         port=config.MYSQL_PORT,
-        ssl=True,
+        ssl={},   # <-- use an empty dictionary
         cursorclass=DictCursor,
         autocommit=True
     )
