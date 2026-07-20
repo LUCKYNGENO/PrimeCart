@@ -27,11 +27,10 @@ def get_db():
         password=config.MYSQL_PASSWORD,
         database=config.MYSQL_DB,
         port=config.MYSQL_PORT,
-        ssl={"ssl": {}},
+        ssl=True,
         cursorclass=DictCursor,
         autocommit=True
     )
-
 
 # ==========================
 # HELPERS
@@ -561,28 +560,13 @@ def add_to_wishlist(id):
     return redirect(url_for("wishlist"))
 
 
-# ==========================
-# REMOVE FROM WISHLIST
-# ==========================
-
 @app.route("/wishlist/remove/<int:id>")
 def remove_from_wishlist(id):
-
-    conn = get_db()
-    cur = conn.cursor()
-
-    cur.execute(
-        "DELETE FROM wishlist WHERE product_id=%s",
-        (id,)
-    )
-
-    conn.commit()
-
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM wishlist WHERE product_id = %s", (id,))
+    mysql.connection.commit()
     cur.close()
-    conn.close()
-
     flash("Removed from wishlist.", "info")
-
     return redirect(url_for("wishlist"))
 
 
@@ -592,36 +576,24 @@ def remove_from_wishlist(id):
 
 @app.route("/cart")
 def cart():
-
     ids = session.get("cart", [])
     products = []
 
     if ids:
-
-        conn = get_db()
-        cur = conn.cursor()
-
-        placeholders = ",".join(["%s"] * len(ids))
-
+        cur = mysql.connection.cursor()
+        placeholders = ", ".join(["%s"] * len(ids))
         cur.execute(
             f"SELECT * FROM products WHERE id IN ({placeholders})",
             tuple(ids)
         )
-
         products = cur.fetchall()
-
         cur.close()
-        conn.close()
 
-    return render_template(
-        "cart.html",
-        products=products
-    )
+    return render_template("cart.html", products=products)
 
 
 @app.route("/cart/add/<int:id>")
 def add_to_cart(id):
-
     if "cart" not in session:
         session["cart"] = []
 
@@ -634,13 +606,11 @@ def add_to_cart(id):
         flash("Already in your cart.", "info")
 
     session["cart"] = cart
-
     return redirect(url_for("cart"))
 
 
 @app.route("/cart/remove/<int:id>")
 def remove_from_cart(id):
-
     cart = session.get("cart", [])
 
     if id in cart:
@@ -648,17 +618,13 @@ def remove_from_cart(id):
         flash("Removed from cart.", "info")
 
     session["cart"] = cart
-
     return redirect(url_for("cart"))
 
 
 @app.route("/cart/clear")
 def clear_cart():
-
     session.pop("cart", None)
-
     flash("Cart cleared.", "info")
-
     return redirect(url_for("cart"))
 
 
@@ -668,19 +634,16 @@ def clear_cart():
 
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
-
     if request.method == "POST":
-
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip()
         message = request.form.get("message", "").strip()
 
         if not name or not email or not message:
-            return render_template(
-                "contact.html",
-                error="Please fill in all fields."
-            )
+            return render_template("contact.html", error="Please fill in all fields.")
 
+        # TODO: Save to DB or send email — replace print with real logic
+        # Example: cur.execute("INSERT INTO messages (name, email, message) VALUES (%s,%s,%s)", ...)
         print(f"[CONTACT] {name} <{email}>: {message}")
 
         return render_template(
