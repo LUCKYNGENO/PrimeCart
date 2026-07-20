@@ -103,48 +103,52 @@
 
     <h2>Manage Products</h2>
 
-    <table class="admin-table">
+<table class="admin-table">
 
-        <tr>
-            <th>ID</th>
-            <th>Image</th>
-            <th>Name</th>
-            <th>Price</th>
-            <th>Actions</th>
-        </tr>
+    <tr>
+        <th>ID</th>
+        <th>Image</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Actions</th>
+    </tr>
 
-        {% for product in products %}
-        <tr>
+    {% for product in products %}
+    <tr>
 
-            <td>{{ product[0] }}</td>
+        <td>{{ product["id"] }}</td>
 
-            <td>
-                <img src="{{ url_for('static', filename='uploads/' + product[4]) }}" width="70" alt="{{ product[1] }}">
-            </td>
+        <td>
+            {% if product["image"] %}
+                <img src="{{ url_for('static', filename='uploads/' + product['image']) }}" width="70" alt="{{ product['name'] }}">
+            {% else %}
+                No Image
+            {% endif %}
+        </td>
 
-            <td>{{ product[1] }}</td>
+        <td>{{ product["name"] }}</td>
 
-            <td>${{ '%.2f'|format(product[3]) }}</td>
+        <td>${{ "%.2f"|format(product["price"]) }}</td>
 
-            <td class="action-buttons">
-                <a href="/edit/{{ product[0] }}">
-                    <button type="button">Edit</button>
-                </a>
+        <td class="action-buttons">
+            <a href="/edit/{{ product['id'] }}">
+                <button type="button">Edit</button>
+            </a>
 
-                <form action="/delete/{{ product[0] }}" method="POST" class="inline-form"
-                      onsubmit="return confirm('Delete {{ product[1] }}? This can\'t be undone.');">
-                    <button type="submit" class="btn-delete">Delete</button>
-                </form>
-            </td>
+            <form action="/delete/{{ product['id'] }}" method="POST" class="inline-form"
+                  onsubmit="return confirm('Delete {{ product['name'] }}? This can\'t be undone.');">
+                <button type="submit" class="btn-delete">Delete</button>
+            </form>
+        </td>
 
-        </tr>
-        {% else %}
-        <tr>
-            <td colspan="5" class="empty-state">No products yet — add one above.</td>
-        </tr>
-        {% endfor %}
+    </tr>
+    {% else %}
+    <tr>
+        <td colspan="5" class="empty-state">No products yet — add one above.</td>
+    </tr>
+    {% endfor %}
 
-    </table>
+</table>
 
 </div>
 
