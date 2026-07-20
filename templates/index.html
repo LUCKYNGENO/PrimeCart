@@ -69,23 +69,23 @@
 
     <div class="products products--compact">
         {% for product in trending %}
-        <div class="card">
-            <a href="/product/{{ product[0] }}">
-                {% if product[4] %}
+               <div class="card">
+            <a href="/product/{{ product.id }}">
+                {% if product.image %}
                     <img
-                        src="{{ url_for('static', filename='uploads/' + product[4]) }}"
-                        alt="{{ product[1] }}"
+                        src="{{ url_for('static', filename='uploads/' + product.image) }}"
+                        alt="{{ product.name }}"
                         loading="lazy"
                     >
                 {% else %}
-                    <img src="https://placehold.co/250x200?text=No+Image" alt="{{ product[1] }}">
+                    <img src="https://placehold.co/250x200?text=No+Image" alt="{{ product.name }}">
                 {% endif %}
             </a>
 
             <div class="card-body">
-                <h3 class="card-title">{{ product[1] }}</h3>
-                <p class="price">${{ "%.2f"|format(product[3]) }}</p>
-                <a href="/product/{{ product[0] }}" class="btn btn--outline btn--sm">View Product</a>
+                <h3 class="card-title">{{ product.name }}</h3>
+                <p class="price">${{ "%.2f"|format(product.price) }}</p>
+                <a href="/product/{{ product.id }}" class="btn btn--outline btn--sm">View Product</a>
             </div>
         </div>
         {% endfor %}
@@ -106,37 +106,37 @@
         {% for product in featured_products %}
         <div class="card">
 
-            {% if product[13] and product[13] > 0 %}
-                <div class="sale-badge">{{ product[13] }}% OFF</div>
+            {% if product.discount and product.discount > 0 %}
+                <div class="sale-badge">{{ product.discount }}% OFF</div>
             {% endif %}
 
-            <a href="/product/{{ product[0] }}">
-                {% if product[4] %}
+            <a href="/product/{{ product.id }}">
+                {% if product.image %}
                     <img
-                        src="{{ url_for('static', filename='uploads/' + product[4]) }}"
-                        alt="{{ product[1] }}"
+                        src="{{ url_for('static', filename='uploads/' + product.image) }}"
+                        alt="{{ product.name }}"
                         loading="lazy"
                     >
                 {% else %}
-                    <img src="https://placehold.co/250x200?text=No+Image" alt="{{ product[1] }}">
+                    <img src="https://placehold.co/250x200?text=No+Image" alt="{{ product.name }}">
                 {% endif %}
             </a>
 
             <div class="card-body">
-                <h3 class="card-title">{{ product[1] }}</h3>
+                <h3 class="card-title">{{ product.name }}</h3>
 
-                {% if product[13] and product[13] > 0 %}
-                    <p class="old-price">${{ "%.2f"|format(product[3]) }}</p>
-                    <p class="price">${{ "%.2f"|format(product[3] * (100 - product[13]) / 100) }}</p>
+                {% if product.discount and product.discount > 0 %}
+                    <p class="old-price">${{ "%.2f"|format(product.price) }}</p>
+                    <p class="price">${{ "%.2f"|format(product.price * (100 - product.discount) / 100) }}</p>
                 {% else %}
-                    <p class="price">${{ "%.2f"|format(product[3]) }}</p>
+                    <p class="price">${{ "%.2f"|format(product.price) }}</p>
                 {% endif %}
 
-                {% if product[6] %}
-                    <p class="card-desc">{{ product[6][:80] }}{% if product[6]|length > 80 %}…{% endif %}</p>
+                {% if product.description %}
+                    <p class="card-desc">{{ product.description[:80] }}{% if product.description|length > 80 %}…{% endif %}</p>
                 {% endif %}
 
-                <a href="/product/{{ product[0] }}" class="btn btn--outline btn--sm">View Product</a>
+                <a href="/product/{{ product.id }}" class="btn btn--outline btn--sm">View Product</a>
             </div>
 
         </div>
@@ -176,48 +176,52 @@
             {% for product in products %}
             <div class="card">
 
-                {% if product[13] and product[13] > 0 %}
-                    <div class="sale-badge">{{ product[13] }}% OFF</div>
+                {% if product.discount and product.discount > 0 %}
+                    <div class="sale-badge">{{ product.discount }}% OFF</div>
                 {% endif %}
 
-                <a href="/product/{{ product[0] }}">
-                    {% if product[4] %}
+                <a href="/product/{{ product.id }}">
+                    {% if product.image %}
                         <img
-                            src="{{ url_for('static', filename='uploads/' + product[4]) }}"
-                            alt="{{ product[1] }}"
+                            src="{{ url_for('static', filename='uploads/' + product.image) }}"
+                            alt="{{ product.name }}"
                             loading="lazy"
                         >
                     {% else %}
-                        <img src="https://placehold.co/250x200?text=No+Image" alt="{{ product[1] }}">
+                        <img src="https://placehold.co/250x200?text=No+Image" alt="{{ product.name }}">
                     {% endif %}
                 </a>
 
                 <div class="card-body">
-                    <h3 class="card-title">{{ product[1] }}</h3>
+                    <h3 class="card-title">{{ product.name }}</h3>
 
-                    {% if product[13] and product[13] > 0 %}
-                        <p class="old-price">${{ "%.2f"|format(product[3]) }}</p>
-                        <p class="price">${{ "%.2f"|format(product[3] * (100 - product[13]) / 100) }}</p>
+                    {% if product.discount and product.discount > 0 %}
+                        <p class="old-price">${{ "%.2f"|format(product.price) }}</p>
+                        <p class="price">${{ "%.2f"|format(product.price * (100 - product.discount) / 100) }}</p>
                     {% else %}
-                        <p class="price">${{ "%.2f"|format(product[3]) }}</p>
+                        <p class="price">${{ "%.2f"|format(product.price) }}</p>
                     {% endif %}
 
-                    {% if product[6] %}
-                        <p class="card-desc">{{ product[6][:80] }}{% if product[6]|length > 80 %}…{% endif %}</p>
+                    {% if product.description %}
+                        <p class="card-desc">{{ product.description[:80] }}{% if product.description|length > 80 %}…{% endif %}</p>
                     {% endif %}
 
                     <div class="card-actions">
-                        <a href="/wishlist/add/{{ product[0] }}" class="btn btn--ghost btn--sm" title="Save to Wishlist">
+                        <a href="/wishlist/add/{{ product.id }}" class="btn btn--ghost btn--sm" title="Save to Wishlist">
                             <i class="fa-regular fa-heart"></i> Save
                         </a>
-                        <a href="/cart/add/{{ product[0] }}" class="btn btn--outline btn--sm">
+                        <a href="/cart/add/{{ product.id }}" class="btn btn--outline btn--sm">
                             <i class="fa-solid fa-cart-plus"></i> Cart
                         </a>
-                        <a href="/buy/{{ product[0] }}" class="btn btn--primary btn--sm" target="_blank" rel="noopener noreferrer">
+                        <a href="/buy/{{ product.id }}" class="btn btn--primary btn--sm" target="_blank" rel="noopener noreferrer">
                             Buy Now
                         </a>
                     </div>
                 </div>
+
+            </div>
+            {% endfor %}
+        </div>
 
             </div>
             {% endfor %}
