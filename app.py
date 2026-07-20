@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_mysqldb import MySQL
+import pymysql
+from pymysql.cursors import DictCursor
 import os
 import config
 
@@ -19,7 +20,17 @@ app.config["MYSQL_PASSWORD"] = config.MYSQL_PASSWORD
 app.config["MYSQL_DB"] = config.MYSQL_DB
 app.config["MYSQL_PORT"] = config.MYSQL_PORT
 
-mysql = MySQL(app)
+def get_db():
+    return pymysql.connect(
+        host=config.MYSQL_HOST,
+        user=config.MYSQL_USER,
+        password=config.MYSQL_PASSWORD,
+        database=config.MYSQL_DB,
+        port=config.MYSQL_PORT,
+        ssl={"ssl": {}},
+        cursorclass=DictCursor,
+        autocommit=True
+    )
 
 
 # ==========================
@@ -40,18 +51,23 @@ def admin_required():
 # HOME PAGE
 # ==========================
 
+# ==========================
+# HOME PAGE
+# ==========================
+
 @app.route("/")
 def home():
     search = request.args.get("search", "").strip()
     category = request.args.get("category", "").strip()
 
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
 
     # Featured products
     cur.execute("SELECT * FROM products WHERE featured = TRUE")
     featured_products = cur.fetchall()
 
-    # Trending products (top 4 by rating)
+    # Trending products
     cur.execute("""
         SELECT * FROM products
         ORDER BY rating DESC
@@ -59,7 +75,7 @@ def home():
     """)
     trending = cur.fetchall()
 
-    # Main products — filtered or all
+    # Products
     if search:
         cur.execute(
             "SELECT * FROM products WHERE name LIKE %s",
@@ -67,14 +83,16 @@ def home():
         )
     elif category:
         cur.execute(
-            "SELECT * FROM products WHERE category = %s",
+            "SELECT * FROM products WHERE category=%s",
             (category,)
         )
     else:
         cur.execute("SELECT * FROM products")
 
     products = cur.fetchall()
+
     cur.close()
+    conn.close()
 
     return render_template(
         "index.html",
@@ -92,36 +110,51 @@ def home():
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    # Redirect already-logged-in admins
+
     if admin_required():
         return redirect(url_for("admin"))
 
     if request.method == "POST":
+
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
 
         if not username or not password:
-            return render_template("login.html", error="Please fill in all fields.")
+            return render_template(
+                "login.html",
+                error="Please fill in all fields."
+            )
 
-        cur = mysql.connection.cursor()
+        conn = get_db()
+        cur = conn.cursor()
+
         cur.execute(
-            "SELECT * FROM admins WHERE username = %s",
+            "SELECT * FROM admins WHERE username=%s",
             (username,)
         )
-        admin = cur.fetchone()
-        cur.close()
 
-        # admin[2] = hashed password column
-        if admin and check_password_hash(admin[2], password):
-            session["admin"] = admin[0]
-            session["username"] = admin[1]
-            flash("Welcome back, " + admin[1] + "!", "success")
+        admin = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        if admin and check_password_hash(admin["password"], password):
+            session["admin"] = admin["id"]
+            session["username"] = admin["username"]
+
+            flash(
+                "Welcome back, " + admin["username"] + "!",
+                "success"
+            )
+
             return redirect(url_for("admin"))
 
-        return render_template("login.html", error="Invalid username or password.")
+        return render_template(
+            "login.html",
+            error="Invalid username or password."
+        )
 
     return render_template("login.html")
-
 
 @app.route("/logout")
 def logout():
@@ -135,59 +168,86 @@ def logout():
 # PRODUCT — VIEW & REVIEWS
 # ==========================
 
+# ==========================
+# PRODUCT — VIEW & REVIEWS
+# ==========================
+
 @app.route("/product/<int:id>")
 def product(id):
-    cur = mysql.connection.cursor()
 
-    cur.execute("SELECT * FROM products WHERE id = %s", (id,))
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT * FROM products WHERE id=%s",
+        (id,)
+    )
+
     product = cur.fetchone()
 
     if not product:
         cur.close()
+        conn.close()
         flash("Product not found.", "error")
         return redirect(url_for("home"))
 
     cur.execute("""
         SELECT username, rating, comment, created_at
         FROM reviews
-        WHERE product_id = %s
+        WHERE product_id=%s
         ORDER BY created_at DESC
     """, (id,))
+
     reviews = cur.fetchall()
 
     cur.close()
+    conn.close()
 
-    return render_template("product.html", product=product, reviews=reviews)
+    return render_template(
+        "product.html",
+        product=product,
+        reviews=reviews
+    )
 
 
 @app.route("/review/<int:id>", methods=["POST"])
 def add_review(id):
+
     username = request.form.get("username", "").strip()
     rating = request.form.get("rating")
     comment = request.form.get("comment", "").strip()
 
-    # Basic validation
     if not username or not rating or not comment:
         flash("Please fill in all review fields.", "error")
         return redirect(url_for("product", id=id))
 
     try:
         rating = int(rating)
-        if not (1 <= rating <= 5):
+
+        if rating < 1 or rating > 5:
             raise ValueError
+
     except ValueError:
-        flash("Rating must be a number between 1 and 5.", "error")
+        flash("Rating must be between 1 and 5.", "error")
         return redirect(url_for("product", id=id))
 
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
+
     cur.execute("""
-        INSERT INTO reviews (product_id, username, rating, comment)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO reviews
+        (product_id, username, rating, comment)
+        VALUES
+        (%s, %s, %s, %s)
     """, (id, username, rating, comment))
-    mysql.connection.commit()
+
+    conn.commit()
+
     cur.close()
+    conn.close()
 
     flash("Review submitted successfully!", "success")
+
     return redirect(url_for("product", id=id))
 
 
@@ -197,10 +257,12 @@ def add_review(id):
 
 @app.route("/admin")
 def admin():
+
     if not admin_required():
         return redirect(url_for("login"))
 
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
 
     cur.execute("SELECT * FROM products")
     products = cur.fetchall()
@@ -215,6 +277,7 @@ def admin():
     total_reviews = cur.fetchone()[0]
 
     cur.close()
+    conn.close()
 
     return render_template(
         "admin.html",
@@ -231,6 +294,7 @@ def admin():
 
 @app.route("/add_product", methods=["POST"])
 def add_product():
+
     if not admin_required():
         return redirect(url_for("login"))
 
@@ -243,56 +307,103 @@ def add_product():
     flash_sale = 1 if request.form.get("flash_sale") else 0
 
     if not name or not category or not price:
-        flash("Name, category, and price are required.", "error")
+        flash("Name, category and price are required.", "error")
         return redirect(url_for("admin"))
 
     image = request.files.get("image")
     filename = ""
 
     if image and image.filename:
-        if not allowed_file(image.filename):
-            flash("Invalid image format. Allowed: png, jpg, jpeg, gif, webp", "error")
-            return redirect(url_for("admin"))
-        filename = secure_filename(image.filename)
-        image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
 
-    cur = mysql.connection.cursor()
+        if not allowed_file(image.filename):
+            flash(
+                "Invalid image format. Allowed: png, jpg, jpeg, gif, webp",
+                "error"
+            )
+            return redirect(url_for("admin"))
+
+        filename = secure_filename(image.filename)
+        image.save(
+            os.path.join(
+                app.config["UPLOAD_FOLDER"],
+                filename
+            )
+        )
+
+    conn = get_db()
+    cur = conn.cursor()
+
     cur.execute("""
         INSERT INTO products
-            (name, category, price, image, affiliate_link, description, discount, flash_sale)
+        (
+            name,
+            category,
+            price,
+            image,
+            affiliate_link,
+            description,
+            discount,
+            flash_sale
+        )
         VALUES
-            (%s, %s, %s, %s, %s, %s, %s, %s)
-    """, (name, category, price, filename, affiliate_link, description, discount, flash_sale))
-    mysql.connection.commit()
+        (%s,%s,%s,%s,%s,%s,%s,%s)
+    """, (
+        name,
+        category,
+        price,
+        filename,
+        affiliate_link,
+        description,
+        discount,
+        flash_sale
+    ))
+
+    conn.commit()
+
     cur.close()
+    conn.close()
 
     flash("Product added successfully!", "success")
-    return redirect(url_for("admin"))  # Fixed: was redirecting to home()
+
+    return redirect(url_for("admin"))
 
 
 # ==========================
-# EDIT / UPDATE PRODUCT
+# EDIT PRODUCT
 # ==========================
 
 @app.route("/edit/<int:id>")
-def edit_product(id):
+def edit_product():
+
     if not admin_required():
         return redirect(url_for("login"))
 
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM products WHERE id = %s", (id,))
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT * FROM products WHERE id=%s",
+        (id,)
+    )
+
     product = cur.fetchone()
+
     cur.close()
+    conn.close()
 
     if not product:
         flash("Product not found.", "error")
         return redirect(url_for("admin"))
 
-    return render_template("edit.html", product=product)
+    return render_template(
+        "edit.html",
+        product=product
+    )
 
 
 @app.route("/update/<int:id>", methods=["POST"])
 def update_product(id):
+
     if not admin_required():
         return redirect(url_for("login"))
 
@@ -303,19 +414,37 @@ def update_product(id):
     description = request.form.get("description", "").strip()
 
     if not name or not category or not price:
-        flash("Name, category, and price are required.", "error")
+        flash("Name, category and price are required.", "error")
         return redirect(url_for("edit_product", id=id))
 
-    cur = mysql.connection.cursor()
+    conn = get_db()
+    cur = conn.cursor()
+
     cur.execute("""
         UPDATE products
-        SET name = %s, category = %s, price = %s, affiliate_link = %s, description = %s
-        WHERE id = %s
-    """, (name, category, price, affiliate_link, description, id))
-    mysql.connection.commit()
+        SET
+            name=%s,
+            category=%s,
+            price=%s,
+            affiliate_link=%s,
+            description=%s
+        WHERE id=%s
+    """, (
+        name,
+        category,
+        price,
+        affiliate_link,
+        description,
+        id
+    ))
+
+    conn.commit()
+
     cur.close()
+    conn.close()
 
     flash("Product updated successfully!", "success")
+
     return redirect(url_for("admin"))
 
 
@@ -325,39 +454,60 @@ def update_product(id):
 
 @app.route("/delete/<int:id>")
 def delete_product(id):
+
     if not admin_required():
         return redirect(url_for("login"))
 
-    cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM products WHERE id = %s", (id,))
-    mysql.connection.commit()
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "DELETE FROM products WHERE id=%s",
+        (id,)
+    )
+
+    conn.commit()
+
     cur.close()
+    conn.close()
 
     flash("Product deleted.", "info")
+
     return redirect(url_for("admin"))
 
 
 # ==========================
-# BUY (AFFILIATE CLICK TRACKING)
+# BUY (Affiliate Click Tracking)
 # ==========================
 
 @app.route("/buy/<int:id>")
 def buy_product(id):
-    cur = mysql.connection.cursor()
 
-    # Verify product exists first
-    cur.execute("SELECT affiliate_link FROM products WHERE id = %s", (id,))
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT affiliate_link FROM products WHERE id=%s",
+        (id,)
+    )
+
     product = cur.fetchone()
 
     if not product:
         cur.close()
+        conn.close()
         flash("Product not found.", "error")
         return redirect(url_for("home"))
 
-    # Record the click
-    cur.execute("INSERT INTO clicks (product_id) VALUES (%s)", (id,))
-    mysql.connection.commit()
+    cur.execute(
+        "INSERT INTO clicks (product_id) VALUES (%s)",
+        (id,)
+    )
+
+    conn.commit()
+
     cur.close()
+    conn.close()
 
     return redirect(product[0])
 
@@ -368,17 +518,26 @@ def buy_product(id):
 
 @app.route("/wishlist")
 def wishlist():
-    cur = mysql.connection.cursor()
+
+    conn = get_db()
+    cur = conn.cursor()
+
     cur.execute("""
         SELECT products.*
         FROM wishlist
-        JOIN products ON wishlist.product_id = products.id
+        JOIN products
+        ON wishlist.product_id = products.id
     """)
+
     products = cur.fetchall()
+
     cur.close()
+    conn.close()
 
-    return render_template("wishlist.html", products=products)
-
+    return render_template(
+        "wishlist.html",
+        products=products
+    )
 
 @app.route("/wishlist/add/<int:id>")
 def add_to_wishlist(id):
@@ -402,13 +561,28 @@ def add_to_wishlist(id):
     return redirect(url_for("wishlist"))
 
 
+# ==========================
+# REMOVE FROM WISHLIST
+# ==========================
+
 @app.route("/wishlist/remove/<int:id>")
 def remove_from_wishlist(id):
-    cur = mysql.connection.cursor()
-    cur.execute("DELETE FROM wishlist WHERE product_id = %s", (id,))
-    mysql.connection.commit()
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "DELETE FROM wishlist WHERE product_id=%s",
+        (id,)
+    )
+
+    conn.commit()
+
     cur.close()
+    conn.close()
+
     flash("Removed from wishlist.", "info")
+
     return redirect(url_for("wishlist"))
 
 
@@ -418,24 +592,36 @@ def remove_from_wishlist(id):
 
 @app.route("/cart")
 def cart():
+
     ids = session.get("cart", [])
     products = []
 
     if ids:
-        cur = mysql.connection.cursor()
-        placeholders = ", ".join(["%s"] * len(ids))
+
+        conn = get_db()
+        cur = conn.cursor()
+
+        placeholders = ",".join(["%s"] * len(ids))
+
         cur.execute(
             f"SELECT * FROM products WHERE id IN ({placeholders})",
             tuple(ids)
         )
-        products = cur.fetchall()
-        cur.close()
 
-    return render_template("cart.html", products=products)
+        products = cur.fetchall()
+
+        cur.close()
+        conn.close()
+
+    return render_template(
+        "cart.html",
+        products=products
+    )
 
 
 @app.route("/cart/add/<int:id>")
 def add_to_cart(id):
+
     if "cart" not in session:
         session["cart"] = []
 
@@ -448,11 +634,13 @@ def add_to_cart(id):
         flash("Already in your cart.", "info")
 
     session["cart"] = cart
+
     return redirect(url_for("cart"))
 
 
 @app.route("/cart/remove/<int:id>")
 def remove_from_cart(id):
+
     cart = session.get("cart", [])
 
     if id in cart:
@@ -460,13 +648,17 @@ def remove_from_cart(id):
         flash("Removed from cart.", "info")
 
     session["cart"] = cart
+
     return redirect(url_for("cart"))
 
 
 @app.route("/cart/clear")
 def clear_cart():
+
     session.pop("cart", None)
+
     flash("Cart cleared.", "info")
+
     return redirect(url_for("cart"))
 
 
@@ -476,16 +668,19 @@ def clear_cart():
 
 @app.route("/contact", methods=["GET", "POST"])
 def contact():
+
     if request.method == "POST":
+
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip()
         message = request.form.get("message", "").strip()
 
         if not name or not email or not message:
-            return render_template("contact.html", error="Please fill in all fields.")
+            return render_template(
+                "contact.html",
+                error="Please fill in all fields."
+            )
 
-        # TODO: Save to DB or send email — replace print with real logic
-        # Example: cur.execute("INSERT INTO messages (name, email, message) VALUES (%s,%s,%s)", ...)
         print(f"[CONTACT] {name} <{email}>: {message}")
 
         return render_template(
