@@ -135,10 +135,15 @@
                 <button type="button">Edit</button>
             </a>
 
-            <form action="/delete/{{ product['id'] }}" method="POST" class="inline-form"
-                  onsubmit="return confirm('Delete {{ product['name'] }}? This can\'t be undone.');">
-                <button type="submit" class="btn-delete">Delete</button>
-            </form>
+          <form action="/delete/{{ product.id }}"
+      method="POST"
+      class="inline-form"
+      onsubmit="return confirm('Delete {{ product.name }}? This can\'t be undone.');">
+
+    <button type="submit" class="btn-delete">Delete</button>
+
+</form>
+
         </td>
 
     </tr>
