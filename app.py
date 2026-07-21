@@ -190,13 +190,13 @@ def logout():
 # PRODUCT — VIEW & REVIEWS
 # ==========================
 
-
 @app.route("/product/<int:id>")
 def product(id):
 
     conn = get_db()
     cur = conn.cursor()
 
+    # Get the selected product
     cur.execute(
         "SELECT * FROM products WHERE id=%s",
         (id,)
@@ -210,6 +210,21 @@ def product(id):
         flash("Product not found.", "error")
         return redirect(url_for("home"))
 
+    # Get related products
+    cur.execute("""
+        SELECT *
+        FROM products
+        WHERE category=%s
+        AND id != %s
+        LIMIT 4
+    """, (
+        product["category"],
+        id
+    ))
+
+    related_products = cur.fetchall()
+
+    # Get reviews
     cur.execute("""
         SELECT username, rating, comment, created_at
         FROM reviews
@@ -225,7 +240,8 @@ def product(id):
     return render_template(
         "product.html",
         product=product,
-        reviews=reviews
+        reviews=reviews,
+        related_products=related_products
     )
 
 
