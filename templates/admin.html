@@ -9,6 +9,14 @@
     <h1>Admin Dashboard</h1>
     <h2>Welcome, {{ session.get('username', 'Admin') }} 👋</h2>
 
+    <div style="margin-bottom:20px;">
+
+    <a href="/admin/orders" class="btn btn--primary">
+        📦 View Customer Orders
+    </a>
+
+</div>
+
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="flash-messages">

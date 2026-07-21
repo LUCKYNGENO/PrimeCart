@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+
+<div class="checkout-container">
+
+    <h1 class="section-title">🛍 Checkout</h1>
+
+    <div class="checkout-grid">
+
+        <!-- Order Summary -->
+        <div class="order-summary">
+
+            <h2>Order Summary</h2>
+
+            {% for product in products %}
+
+            <div class="summary-item">
+
+                <div>
+
+                    <strong>{{ product["name"] }}</strong><br>
+
+                    Qty: {{ product["quantity"] }}
+
+                </div>
+
+                <div>
+
+                    ${{ "%.2f"|format(product["subtotal"]) }}
+
+                </div>
+
+            </div>
+
+            <hr>
+
+            {% endfor %}
+
+            <h2 class="checkout-total">
+
+                Total:
+                ${{ "%.2f"|format(total) }}
+
+            </h2>
+
+        </div>
+
+        <!-- Customer Details -->
+        <div class="checkout-form">
+
+            <h2>Customer Details</h2>
+
+            <form action="/place_order" method="POST">
+
+                <label>Full Name</label>
+                <input
+                    type="text"
+                    name="name"
+                    required
+                >
+
+                <label>Email Address</label>
+                <input
+                    type="email"
+                    name="email"
+                    required
+                >
+
+                <label>Phone Number</label>
+                <input
+                    type="text"
+                    name="phone"
+                    required
+                >
+
+                <label>Delivery Address</label>
+                <textarea
+                    name="address"
+                    rows="4"
+                    required
+                ></textarea>
+
+                <button
+                    type="submit"
+                    class="btn btn--primary btn--lg"
+                >
+
+                    Place Order
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

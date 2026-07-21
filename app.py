@@ -613,36 +613,62 @@ def remove_from_wishlist(id):
 
 @app.route("/cart")
 def cart():
-    ids = session.get("cart", [])
-    products = []
 
-    if ids:
-        cur = mysql.connection.cursor()
-        placeholders = ", ".join(["%s"] * len(ids))
+    cart = session.get("cart", {})
+
+    products = []
+    total = 0
+
+    if cart:
+
+        conn = get_db()
+        cur = conn.cursor()
+
+        ids = list(cart.keys())
+
+        placeholders = ",".join(["%s"] * len(ids))
+
         cur.execute(
             f"SELECT * FROM products WHERE id IN ({placeholders})",
             tuple(ids)
         )
+
         products = cur.fetchall()
+
+        for product in products:
+
+            quantity = cart.get(str(product["id"]), 1)
+
+            product["quantity"] = quantity
+            product["subtotal"] = float(product["price"]) * quantity
+
+            total += product["subtotal"]
+
         cur.close()
+        conn.close()
 
-    return render_template("cart.html", products=products)
-
+    return render_template(
+        "cart.html",
+        products=products,
+        total=total
+    )
 
 @app.route("/cart/add/<int:id>")
 def add_to_cart(id):
-    if "cart" not in session:
-        session["cart"] = []
 
-    cart = session["cart"]
+    cart = session.get("cart", {})
 
-    if id not in cart:
-        cart.append(id)
-        flash("Added to cart!", "success")
+    product_id = str(id)
+
+    if product_id in cart:
+        cart[product_id] += 1
     else:
-        flash("Already in your cart.", "info")
+        cart[product_id] = 1
 
     session["cart"] = cart
+
+    flash("Added to cart!", "success")
+
     return redirect(url_for("cart"))
 
 
@@ -699,6 +725,215 @@ def contact():
 def about():
     return render_template("about.html")
 
+@app.route("/cart/increase/<int:id>")
+def increase_quantity(id):
+
+    cart = session.get("cart", {})
+
+    product_id = str(id)
+
+    if product_id in cart:
+        cart[product_id] += 1
+
+    session["cart"] = cart
+
+    return redirect(url_for("cart"))
+
+@app.route("/cart/decrease/<int:id>")
+def decrease_quantity(id):
+
+    cart = session.get("cart", {})
+
+    product_id = str(id)
+
+    if product_id in cart:
+
+        cart[product_id] -= 1
+
+        if cart[product_id] <= 0:
+            del cart[product_id]
+
+    session["cart"] = cart
+
+    return redirect(url_for("cart"))
+
+@app.route("/checkout")
+def checkout():
+
+    cart = session.get("cart", {})
+
+    if not cart:
+        flash("Your cart is empty.", "warning")
+        return redirect(url_for("cart"))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    ids = list(cart.keys())
+    placeholders = ",".join(["%s"] * len(ids))
+
+    cur.execute(
+        f"SELECT * FROM products WHERE id IN ({placeholders})",
+        tuple(ids)
+    )
+
+    products = cur.fetchall()
+
+    total = 0
+
+    for product in products:
+        quantity = cart[str(product["id"])]
+        product["quantity"] = quantity
+        product["subtotal"] = quantity * float(product["price"])
+        total += product["subtotal"]
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "checkout.html",
+        products=products,
+        total=total
+    )
+
+@app.route("/place_order", methods=["POST"])
+def place_order():
+
+    cart = session.get("cart", {})
+
+    if not cart:
+        flash("Your cart is empty.", "warning")
+        return redirect(url_for("cart"))
+
+    name = request.form["name"]
+    email = request.form["email"]
+    phone = request.form["phone"]
+    address = request.form["address"]
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    ids = list(cart.keys())
+    placeholders = ",".join(["%s"] * len(ids))
+
+    cur.execute(
+        f"SELECT * FROM products WHERE id IN ({placeholders})",
+        tuple(ids)
+    )
+
+    products = cur.fetchall()
+
+    total = 0
+
+    for product in products:
+        quantity = cart[str(product["id"])]
+        subtotal = quantity * float(product["price"])
+        total += subtotal
+
+    cur.execute("""
+        INSERT INTO orders
+        (customer_name, email, phone, address, total)
+        VALUES (%s, %s, %s, %s, %s)
+        RETURNING id
+    """, (
+        name,
+        email,
+        phone,
+        address,
+        total
+    ))
+
+    order = cur.fetchone()
+    order_id = order["id"]
+
+    for product in products:
+
+        quantity = cart[str(product["id"])]
+
+        cur.execute("""
+            INSERT INTO order_items
+            (order_id, product_id, quantity, price)
+            VALUES (%s, %s, %s, %s)
+        """, (
+            order_id,
+            product["id"],
+            quantity,
+            product["price"]
+        ))
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    session["cart"] = {}
+
+    flash("🎉 Order placed successfully!", "success")
+
+    return redirect(url_for("home"))
+
+@app.route("/admin/orders")
+def admin_orders():
+
+    if not admin_required():
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT *
+        FROM orders
+        ORDER BY created_at DESC
+    """)
+
+    orders = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "admin_orders.html",
+        orders=orders
+    )
+
+@app.route("/admin/order/<int:id>")
+def admin_order(id):
+
+    if not admin_required():
+        return redirect(url_for("login"))
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT * FROM orders WHERE id=%s",
+        (id,)
+    )
+
+    order = cur.fetchone()
+
+    cur.execute("""
+        SELECT
+            p.name,
+            oi.quantity,
+            oi.price
+        FROM order_items oi
+        JOIN products p
+            ON oi.product_id = p.id
+        WHERE oi.order_id=%s
+    """, (id,))
+
+    items = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    return render_template(
+        "order_details.html",
+        order=order,
+        items=items
+    )
 
 # ==========================
 # RUN APP

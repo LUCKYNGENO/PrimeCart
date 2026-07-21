@@ -4,36 +4,98 @@
 
 {% block content %}
 
-<h1 class="section-title">🛒 Shopping Cart</h1>
+<div class="cart-container">
 
-<section class="products">
+    <h1 class="section-title">🛒 Shopping Cart</h1>
 
-{% if products %}
+    {% if products %}
 
-    {% for product in products %}
+        {% for product in products %}
 
-    <div class="card">
+        <div class="cart-buttons">
 
-        <img src="{{ url_for('static', filename='uploads/' + product[4]) }}">
+    <a href="/cart/decrease/{{ product['id'] }}" class="btn btn--ghost">−</a>
 
-        <h3>{{ product[1] }}</h3>
+    <span class="quantity">
+        {{ product["quantity"] }}
+    </span>
 
-        <p class="price">$ {{ product[3] }}</p>
+    <a href="/cart/increase/{{ product['id'] }}" class="btn btn--ghost">+</a>
 
-        <a href="/buy/{{ product[0] }}">
-            <button>Buy Now</button>
-        </a>
+    <a href="/cart/remove/{{ product['id'] }}" class="btn btn--outline">
+        Remove
+    </a>
 
-    </div>
+</div>
 
-    {% endfor %}
+<p class="price">
+    Price: ${{ "%.2f"|format(product["price"]) }}
+</p>
 
-{% else %}
+<p class="price">
+    Subtotal: ${{ "%.2f"|format(product["subtotal"]) }}
+</p>
+                <div class="cart-buttons">
 
-<h2>Your cart is empty.</h2>
+                    <a href="/product/{{ product['id'] }}"
+                       class="btn btn--outline">
+                        View
+                    </a>
 
-{% endif %}
+                    <a href="/buy/{{ product['id'] }}"
+                       class="btn btn--primary">
+                        Buy Now
+                    </a>
 
-</section>
+                    <a href="/cart/remove/{{ product['id'] }}"
+                       class="btn btn--ghost">
+                        Remove
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        {% endfor %}
+
+        <div class="cart-total">
+
+            <h2>Total:
+                <span class="price">
+                    ${{ "%.2f"|format(total) }}
+                </span>
+            </h2>
+
+            <a href="/" class="btn btn--outline">
+                Continue Shopping
+            </a>
+
+            <a href="/checkout" class="btn btn--primary">
+                Proceed to Checkout
+            </a>
+
+        </div>
+
+    {% else %}
+
+        <div class="empty-state">
+
+            <h2>Your cart is empty.</h2>
+
+            <p>Add some amazing products to get started.</p>
+
+            <a href="/" class="btn btn--primary">
+                Start Shopping
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</div>
 
 {% endblock %}
