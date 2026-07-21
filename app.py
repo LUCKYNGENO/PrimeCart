@@ -61,29 +61,53 @@ def home():
     conn = get_db()
     cur = conn.cursor()
 
+    # Get all categories
+    cur.execute("""
+        SELECT category, COUNT(*) AS total
+        FROM products
+        GROUP BY category
+        ORDER BY category
+    """)
+    categories = cur.fetchall()
+
     # Featured products
-    cur.execute("SELECT * FROM products WHERE featured = TRUE")
+    cur.execute("""
+        SELECT *
+        FROM products
+        WHERE featured = TRUE
+    """)
     featured_products = cur.fetchall()
 
     # Trending products
     cur.execute("""
-        SELECT * FROM products
+        SELECT *
+        FROM products
         ORDER BY rating DESC
         LIMIT 4
     """)
     trending = cur.fetchall()
 
-    # Products
+    # Search / Category filter
     if search:
         cur.execute(
-            "SELECT * FROM products WHERE name LIKE %s",
+            """
+            SELECT *
+            FROM products
+            WHERE name LIKE %s
+            """,
             ("%" + search + "%",)
         )
+
     elif category:
         cur.execute(
-            "SELECT * FROM products WHERE category=%s",
+            """
+            SELECT *
+            FROM products
+            WHERE category = %s
+            """,
             (category,)
         )
+
     else:
         cur.execute("SELECT * FROM products")
 
@@ -97,10 +121,10 @@ def home():
         products=products,
         featured_products=featured_products,
         trending=trending,
+        categories=categories,
         search=search,
         category=category
     )
-
 
 # ==========================
 # AUTH — LOGIN / LOGOUT

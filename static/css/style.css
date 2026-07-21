@@ -316,16 +316,12 @@ p{
 .logo{
     cursor:pointer;
 }
-.products{
 
-    display:grid;
-
-    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-
-    gap:30px;
-
-    padding:40px;
-
+.product-page {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
 }
 
 .product-image img{
@@ -834,4 +830,265 @@ margin-top:20px;
 
 .about-container li{
     margin:12px 0;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+input,
+textarea,
+select,
+button {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ==========================================
+   MOBILE RESPONSIVE DESIGN
+========================================== */
+
+*{
+    box-sizing:border-box;
+}
+
+img{
+    max-width:100%;
+    height:auto;
+    display:block;
+}
+
+/* Container */
+
+.container,
+.admin-container{
+    width:100%;
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+}
+
+/* Navigation */
+
+nav,
+.navbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:15px;
+}
+
+nav ul,
+.nav-links{
+    display:flex;
+    flex-wrap:wrap;
+    gap:15px;
+    list-style:none;
+    margin:0;
+    padding:0;
+}
+
+nav a,
+.nav-links a{
+    text-decoration:none;
+}
+
+/* Hero */
+
+.hero{
+    padding:80px 20px;
+    text-align:center;
+}
+
+.hero h1{
+    font-size:3rem;
+    line-height:1.2;
+}
+
+.hero p{
+    font-size:1.2rem;
+    margin:20px auto;
+    max-width:650px;
+}
+
+/* Categories */
+
+.category-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+    gap:20px;
+}
+
+/* Product grid */
+
+.products{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:25px;
+}
+
+.products--compact{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+}
+
+/* Cards */
+
+.card{
+    width:100%;
+    border-radius:12px;
+    overflow:hidden;
+}
+
+.card img{
+    width:100%;
+    height:220px;
+    object-fit:cover;
+}
+
+.card-body{
+    padding:15px;
+}
+
+.card-title{
+    font-size:1.1rem;
+}
+
+.price{
+    font-size:1.3rem;
+    font-weight:bold;
+}
+
+.card-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.card-actions a{
+    flex:1;
+    text-align:center;
+}
+
+/* Dashboard cards */
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+}
+
+/* Forms */
+
+form{
+    width:100%;
+}
+
+input,
+textarea,
+select,
+button{
+    width:100%;
+    max-width:100%;
+    padding:12px;
+    box-sizing:border-box;
+}
+
+/* Tables */
+
+.admin-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.admin-table th,
+.admin-table td{
+    padding:12px;
+}
+
+/* Phones */
+
+@media (max-width:768px){
+
+    .hero{
+        padding:50px 15px;
+    }
+
+    .hero h1{
+        font-size:2rem;
+    }
+
+    .hero p{
+        font-size:1rem;
+    }
+
+    nav,
+    .navbar{
+        flex-direction:column;
+        align-items:center;
+    }
+
+    nav ul,
+    .nav-links{
+        flex-direction:column;
+        width:100%;
+        text-align:center;
+    }
+
+    .products{
+        grid-template-columns:1fr;
+    }
+
+    .products--compact{
+        grid-template-columns:1fr;
+    }
+
+    .category-grid{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+    .stats{
+        grid-template-columns:1fr;
+    }
+
+    .card img{
+        height:240px;
+    }
+
+    .card-actions{
+        flex-direction:column;
+    }
+
+    .admin-table{
+        display:block;
+        overflow-x:auto;
+        white-space:nowrap;
+    }
+
+}
+
+/* Small phones */
+
+@media (max-width:480px){
+
+    .hero h1{
+        font-size:1.6rem;
+    }
+
+    .hero p{
+        font-size:.95rem;
+    }
+
+    .category-grid{
+        grid-template-columns:1fr;
+    }
+
+    .container,
+    .admin-container{
+        padding:12px;
+    }
+
 }

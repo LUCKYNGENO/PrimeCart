@@ -21,41 +21,55 @@
 <!-- ================================
      CATEGORIES
 ================================ -->
+
+<!-- ================================
+     CATEGORIES
+================================ -->
 <section class="categories">
+
     <h2 class="section-title">Shop by Category</h2>
+
     <div class="category-grid">
 
-        <a href="/?category=Electronics" class="category-card {% if category == 'Electronics' %}category-card--active{% endif %}">
-            <span class="category-icon">📱</span>
-            <h3>Electronics</h3>
+        {% for cat in categories %}
+
+        <a href="/?category={{ cat['category'] }}"
+           class="category-card {% if category == cat['category'] %}category-card--active{% endif %}">
+
+            <span class="category-icon">
+                {% if cat['category'] == 'Electronics' %}
+                    📱
+                {% elif cat['category'] == 'Gaming' %}
+                    🎮
+                {% elif cat['category'] == 'Phones' %}
+                    📞
+                {% elif cat['category'] == 'Wearables' %}
+                    ⌚
+                {% elif cat['category'] == 'Fashion' %}
+                    👕
+                {% elif cat['category'] == 'Beauty' %}
+                    💄
+                {% elif cat['category'] == 'Sports' %}
+                    🏋️
+                {% elif cat['category'] == 'Home' %}
+                    🏠
+                {% elif cat['category'] == 'Books' %}
+                    📚
+                {% else %}
+                    📦
+                {% endif %}
+            </span>
+
+            <h3>{{ cat['category'] }}</h3>
+
+            <p>{{ cat['total'] }} Products</p>
+
         </a>
 
-        <a href="/?category=Fashion" class="category-card {% if category == 'Fashion' %}category-card--active{% endif %}">
-            <span class="category-icon">👕</span>
-            <h3>Fashion</h3>
-        </a>
-
-        <a href="/?category=Home" class="category-card {% if category == 'Home' %}category-card--active{% endif %}">
-            <span class="category-icon">🏠</span>
-            <h3>Home</h3>
-        </a>
-
-        <a href="/?category=Beauty" class="category-card {% if category == 'Beauty' %}category-card--active{% endif %}">
-            <span class="category-icon">💄</span>
-            <h3>Beauty</h3>
-        </a>
-
-        <a href="/?category=Sports" class="category-card {% if category == 'Sports' %}category-card--active{% endif %}">
-            <span class="category-icon">🏋️</span>
-            <h3>Sports</h3>
-        </a>
-
-        <a href="/?category=Books" class="category-card {% if category == 'Books' %}category-card--active{% endif %}">
-            <span class="category-icon">📚</span>
-            <h3>Books</h3>
-        </a>
+        {% endfor %}
 
     </div>
+
 </section>
 
 <!-- ================================
