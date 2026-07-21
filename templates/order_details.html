@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Order Details{% endblock %}
+
+{% block content %}
+
+<div class="admin-container">
+
+    <h1>📦 Order #{{ order["id"] }}</h1>
+
+    <div class="card">
+
+        <h2>Customer Information</h2>
+
+        <p><strong>Name:</strong> {{ order["customer_name"] }}</p>
+
+        <p><strong>Email:</strong> {{ order["email"] }}</p>
+
+        <p><strong>Phone:</strong> {{ order["phone"] }}</p>
+
+        <p><strong>Address:</strong> {{ order["address"] }}</p>
+
+        <p><strong>Date:</strong> {{ order["created_at"] }}</p>
+
+        <hr>
+
+        <h3>Order Status</h3>
+
+        <form action="/admin/order/{{ order['id'] }}/status" method="POST">
+
+            <select name="status">
+
+                <option value="Pending"
+                    {% if order["status"]=="Pending" %}selected{% endif %}>
+                    Pending
+                </option>
+
+                <option value="Processing"
+                    {% if order["status"]=="Processing" %}selected{% endif %}>
+                    Processing
+                </option>
+
+                <option value="Shipped"
+                    {% if order["status"]=="Shipped" %}selected{% endif %}>
+                    Shipped
+                </option>
+
+                <option value="Delivered"
+                    {% if order["status"]=="Delivered" %}selected{% endif %}>
+                    Delivered
+                </option>
+
+                <option value="Cancelled"
+                    {% if order["status"]=="Cancelled" %}selected{% endif %}>
+                    Cancelled
+                </option>
+
+            </select>
+
+            <br><br>
+
+            <button type="submit">
+                Update Status
+            </button>
+
+        </form>
+
+    </div>
+
+    <br>
+
+    <h2>Products Ordered</h2>
+
+    <table class="admin-table">
+
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Subtotal</th>
+        </tr>
+
+        {% for item in items %}
+
+        <tr>
+
+            <td>{{ item["name"] }}</td>
+
+            <td>{{ item["quantity"] }}</td>
+
+            <td>${{ "%.2f"|format(item["price"]) }}</td>
+
+            <td>${{ "%.2f"|format(item["price"] * item["quantity"]) }}</td>
+
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+    <br>
+
+    <h2 style="text-align:right">
+        Total:
+        ${{ "%.2f"|format(order["total"]) }}
+    </h2>
+
+    <br>
+
+    <a href="/admin/orders">
+        <button>← Back to Orders</button>
+    </a>
+
+</div>
+
+{% endblock %}

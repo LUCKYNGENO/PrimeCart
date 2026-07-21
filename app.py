@@ -1,12 +1,16 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.utils import secure_filename
+from db import get_db
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
 from pymysql.cursors import DictCursor
+from routes.auth import auth
 import os
 import config
 
 app = Flask(__name__)
+
+app.register_blueprint(auth)
 app.secret_key = config.SECRET_KEY
 # Upload folder
 UPLOAD_FOLDER = "static/uploads"
@@ -22,17 +26,6 @@ app.config["MYSQL_PASSWORD"] = config.MYSQL_PASSWORD
 app.config["MYSQL_DB"] = config.MYSQL_DB
 app.config["MYSQL_PORT"] = config.MYSQL_PORT
 
-def get_db():
-    return pymysql.connect(
-        host=config.MYSQL_HOST,
-        user=config.MYSQL_USER,
-        password=config.MYSQL_PASSWORD,
-        database=config.MYSQL_DB,
-        port=config.MYSQL_PORT,
-        ssl={},   # <-- use an empty dictionary
-        cursorclass=DictCursor,
-        autocommit=True
-    )
 
 # ==========================
 # HELPERS
@@ -125,58 +118,6 @@ def home():
         search=search,
         category=category
     )
-
-# ==========================
-# AUTH — LOGIN / LOGOUT
-# ==========================
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-
-    if admin_required():
-        return redirect(url_for("admin"))
-
-    if request.method == "POST":
-
-        username = request.form.get("username", "").strip()
-        password = request.form.get("password", "")
-
-        if not username or not password:
-            return render_template(
-                "login.html",
-                error="Please fill in all fields."
-            )
-
-        conn = get_db()
-        cur = conn.cursor()
-
-        cur.execute(
-            "SELECT * FROM admins WHERE username=%s",
-            (username,)
-        )
-
-        admin = cur.fetchone()
-
-        cur.close()
-        conn.close()
-
-        if admin and check_password_hash(admin["password"], password):
-            session["admin"] = admin["id"]
-            session["username"] = admin["username"]
-
-            flash(
-                "Welcome back, " + admin["username"] + "!",
-                "success"
-            )
-
-            return redirect(url_for("admin"))
-
-        return render_template(
-            "login.html",
-            error="Invalid username or password."
-        )
-
-    return render_template("login.html")
 
 @app.route("/logout")
 def logout():
@@ -896,6 +837,31 @@ def admin_orders():
         "admin_orders.html",
         orders=orders
     )
+
+@app.route("/admin/order/<int:id>/status", methods=["POST"])
+def update_order_status(id):
+
+    if not admin_required():
+        return redirect(url_for("login"))
+
+    status = request.form["status"]
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute(
+        "UPDATE orders SET status=%s WHERE id=%s",
+        (status, id)
+    )
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    flash("Order status updated successfully!", "success")
+
+    return redirect(url_for("admin_order", id=id))
 
 @app.route("/admin/order/<int:id>")
 def admin_order(id):
